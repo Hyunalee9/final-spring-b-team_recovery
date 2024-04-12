@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="admin2">
+
+	<select id="adminOrderList" parameterType="HashMap" resultType="HashMap">
+		SELECT * FROM payment_view
+		<choose>
+			<when test="searchName == 'pa_id'">
+				WHERE pa_id LIKE CONCAT('%', #{search}, '%') ORDER BY
+				o_no DESC LIMIT #{startPage}, #{lastPage}
+			</when>
+			<when test="searchName == 'm_id'">
+				WHERE m_id LIKE CONCAT('%', #{search}, '%') ORDER
+				BY o_no DESC LIMIT #{startPage}, #{lastPage}
+			</when>
+			<when test="searchName == 'p_no'">
+				WHERE p_no LIKE CONCAT('%', #{search}, '%') ORDER
+				BY o_no DESC LIMIT #{startPage}, #{lastPage}
+			</when>
+			<when test="searchName == 'p_title'">
+				WHERE p_title LIKE CONCAT('%', #{search}, '%') ORDER
+				BY o_no DESC LIMIT #{startPage}, #{lastPage}
+			</when>
+			<when test="startDay != null and endDay != null">
+				WHERE DAT BETWEEN #{startDay} AND #{endDay} ORDER
+				BY o_no DESC LIMIT #{startPage}, #{lastPage}
+			</when>
+			<otherwise>
+				ORDER BY o_no DESC LIMIT #{startPage}, #{lastPage}
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="orderTotalList" parameterType="HashMap"  resultType="Integer">
+		SELECT COUNT(*) FROM payment_view
+		<choose>
+			<when test="searchName == 'pa_id'">
+				WHERE pa_id LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test="searchName == 'm_id'">
+				WHERE m_id LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test="searchName == 'p_no'">
+				WHERE p_no LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test="searchName == 'p_title'">
+				WHERE p_title LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test="startDay != null and endDay != null">
+				WHERE DAT BETWEEN #{startDay} AND #{endDay}
+			</when>
+		</choose>
+	</select>
+
+	<update id="modifyState" parameterType="HashMap">
+		UPDATE order_list SET o_state=#{o_state} WHERE pa_id=#{pa_id}
+	</update>
+	
+	<select id="adminOrderDetail" parameterType="HashMap" resultType="HashMap">
+		SELECT * FROM payment_view WHERE pa_id = #{pa_id}
+	</select>
+	
+	<update id="updateWayBill" parameterType="HashMap">
+		UPDATE order_list SET o_waybill=#{o_waybill} WHERE pa_id=#{pa_id}
+	</update>
+	
+	<select id="getAdminOrderDetailList" parameterType="HashMap" resultType="HashMap">
+		SELECT * FROM order_view WHERE pa_id=#{pa_id}
+	</select>
+
+	<select id="getExchangeList" resultType="HashMap" parameterType="HashMap">
+		SELECT * FROM exchange_management
+		ORDER BY e_no DESC LIMIT #{startPage}, #{lastPage}
+	</select>
+	
+	<select id="getToTalList" parameterType="HashMap"  resultType="Integer">
+		SELECT COUNT(*) FROM exchange_management
+	</select>
+	
+	<update id="updateEstate" parameterType="HashMap" >
+		UPDATE exchange_list set e_state=#{e_state},e_waybill=DATE_FORMAT(NOW(),'%Y%m%d%S%i') WHERE o_no =#{o_no}
+	</update>
+	
+	<update id="updateOstate" parameterType="HashMap" >
+		UPDATE order_list set o_state=3 WHERE o_no =#{o_no}
+	</update>
+	
+	<update id="updateInfo" parameterType="HashMap">
+		UPDATE order_list SET o_state=3 WHERE o_no = #{o_no}
+	</update>
+	
+	<select id="getInfo" parameterType="HashMap" resultType="HashMap">
+		SELECT * FROM order_view WHERE o_no=#{o_no}
+	</select>
+	
+	<insert id="insertInfo" parameterType="HashMap">
+		INSERT INTO exchange_list(pa_id,o_no,p_no,e_reason,e_state,e_waybill) VALUES(#{pa_id},#{o_no},#{p_no},#{e_reason},2,DATE_FORMAT(NOW(),'%Y%m%d%S%i'))
+	</insert>
+	
+	<insert id="insertInfo2" parameterType="HashMap">
+		INSERT INTO exchange_list(pa_id,o_no,p_no,e_reason,e_state) VALUES(#{pa_id1},#{o_no},#{p_no1},#{e_reason},0)
+	</insert>
+
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="index">
+
+	<select id="getCategory" resultType="HashMap">
+		SELECT * FROM category
+	</select>
+	
+	<select id="getCategoryMain" resultType="HashMap">
+		<![CDATA[SELECT CAST(@rownum:=@rownum+1 AS SIGNED integer) rnum, c.c_main FROM category c, (SELECT @ROWNUM:=0)R WHERE 1=1 GROUP BY c_main ORDER BY rnum ASC]]>
+	</select>
+	
+	<select id="productList" resultType="HashMap">
+		<![CDATA[
+			SELECT * FROM (
+				SELECT *, RANK() OVER (PARTITION BY c_main ORDER BY p_date DESC) AS RN FROM product_view
+			) AS RANKING WHERE RANKING.RN <=5
+		]]>	
+	</select>
+	
+	<select id="productList2" parameterType="HashMap" resultType="HashMap">
+			SELECT * FROM product_view WHERE c_main=#{category} ORDER BY 
+			<choose>
+				<when test="optionSelect == 'p_priceUp'">p_price DESC </when>
+				<when test="optionSelect == 'p_priceDown'">p_price </when>
+				<otherwise>${optionSelect} DESC </otherwise>
+			</choose>
+			LIMIT 0, ${listSelect}
+	</select>
+	
+	<select id="cp_productList" parameterType="HashMap" resultType="HashMap">
+			SELECT * FROM product_view <if test="category != null || sub != null">WHERE </if><choose>
+				<when test="category != null and sub == null">c_main=#{category} </when>
+				<when test="category != null and sub != null">c_main=#{category} AND c_sub=#{sub} </when>
+			</choose>
+			ORDER BY <choose>
+				<when test="option2 == 'p_priceUp'">p_price DESC </when>
+				<when test="option2 == 'p_priceDown'">p_price </when>
+				<otherwise>${option2} DESC</otherwise>
+			</choose>
+	</select>
+	
+	<select id="detail" parameterType="HashMap" resultType="HashMap">
+		SELECT * FROM product_view WHERE p_no=#{product}
+	</select>
+	
+	<select id="searchList" parameterType="hashMap" resultType="HashMap">
+		SELECT * FROM product_view 
+		WHERE p_title LIKE CONCAT('%', #{search}, '%') OR c_main LIKE CONCAT('%', #{search}, '%') OR c_sub LIKE CONCAT('%', #{search}, '%') 
+		ORDER BY <choose>
+			<when test="option2 == 'p_priceUp'">p_price DESC </when>
+			<when test="option2 == 'p_priceDown'">p_price </when>
+			<otherwise>${option2} DESC</otherwise>
+		</choose>
+	</select>
+	
+</mapper>

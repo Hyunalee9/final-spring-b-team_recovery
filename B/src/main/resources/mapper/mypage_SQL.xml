@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mypage">
+
+	<select id="myinfo" parameterType="HashMap" resultType="HashMap">
+		SELECT * FROM member_view WHERE m_id=#{m_id}
+	</select>
+
+	<delete id="myAccountDelete" parameterType="HashMap">
+		DELETE FROM member WHERE m_id=#{m_id}
+	</delete>
+	
+	<update id="myinfoUpdateEmail" parameterType="HashMap">
+		UPDATE member SET m_email=#{m_email} WHERE m_id=#{m_id}
+	</update>
+	
+	<update id="myinfoUpdatePhone" parameterType="HashMap">
+		UPDATE member SET m_phone=#{m_phone} WHERE m_id=#{m_id}
+	</update>
+	
+	<update id="myinfoUpdateAddr" parameterType="HashMap">
+		UPDATE member SET m_addr=#{m_addr} WHERE m_id=#{m_id}
+	</update>
+	
+	<update id ="myAccountUpdatePW" parameterType="HashMap">
+		UPDATE member SET m_pw=HEX(AES_ENCRYPT(#{pw1}, 'SpringB')) WHERE m_id=#{m_id} 
+	</update>
+	
+	<select id ="cartList" parameterType="HashMap" resultType="HashMap">
+		SELECT * FROM cart_view WHERE m_id=#{m_id}
+	</select>
+	
+	<insert id="inputPointLog" parameterType="hashMap">
+		INSERT INTO pointLog(m_no, po_source, po_vary, po_value) 
+		VALUES(
+			(SELECT m_no FROM member WHERE m_id=#{m_id}), 
+			<choose>
+				<when test="pa_id != null">
+				CONCAT('결제(', #{pa_id}, ')'),
+				</when>
+				<otherwise>
+				'내용 불명',
+				</otherwise>
+			</choose>
+			#{po_vary},
+			#{po_value}
+		)
+	</insert>
+	
+	<select id="getPointLogList" parameterType="HashMap" resultType="HashMap">
+		SELECT * FROM pointLog WHERE 
+				<choose>
+					<when test='category == "gain"'>
+					po_vary = '+' AND 
+					</when>
+					<when test='category == "use"'>
+					po_vary = '-' AND 
+					</when>
+				</choose>
+		m_no = (SELECT m_no FROM member WHERE m_id=#{m_id}) 
+		ORDER BY po_date DESC LIMIT #{startPage}, #{lastPage}
+	</select>
+	
+	<select id="getPointLogTotalList" parameterType="HashMap" resultType="Integer">
+		SELECT COUNT(*) FROM pointLog WHERE 
+			<if test="category != null">
+				<choose>
+					<when test='category == "gain"'>
+					po_vary = '+' AND 
+					</when>
+					<when test='category == "use"'>
+					po_vary = '-' AND 
+					</when>
+				</choose>
+			</if>
+		m_no = (SELECT m_no FROM member WHERE m_id=#{m_id})
+	</select>
+	
+	<insert id="inputRecentLog" parameterType="hashMap">
+		INSERT INTO recentLog(m_no, p_no) 
+		VALUES((SELECT m_no FROM member WHERE m_id=#{m_id}), #{p_no})
+	</insert>
+	
+	<select id ="countRecentLog" parameterType="HashMap" resultType="Integer">
+		SELECT COUNT(*) FROM recentLog WHERE m_no = (SELECT m_no FROM member WHERE m_id=#{m_id})
+	</select>
+	
+	<delete id="deleteRecentLog" parameterType="HashMap">
+		DELETE FROM recentLog WHERE re_no = (SELECT re_no FROM recentLog WHERE m_no = (SELECT m_no FROM member WHERE m_id=#{m_id}) ORDER BY re_no LIMIT 1) 
+	</delete>
+	
+	<select id ="getRecentLogList" parameterType="HashMap" resultType="HashMap">
+		SELECT * FROM recentLog_view WHERE m_no = (SELECT m_no FROM member WHERE m_id=#{m_id}) AND p_state = 1;
+	</select>
+	
+</mapper>
